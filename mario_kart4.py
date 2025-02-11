@@ -4,11 +4,12 @@ import matplotlib.pyplot as plt
 import streamlit as st
 from oauth2client.service_account import ServiceAccountCredentials
 import json
+import traceback  # ✅ Para mostrar detalles de errores
 
 # ✅ Cargar las credenciales desde Streamlit Secrets
 archivo_json = json.loads(st.secrets["google_credentials"]["json"])
 
-# ✅ Cargar datos desde Google Sheets
+# ✅ Cargar datos desde Google Sheets con depuración de errores
 def cargar_datos_google_sheets(archivo_json, nombre_hoja):
     try:
         scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -20,7 +21,7 @@ def cargar_datos_google_sheets(archivo_json, nombre_hoja):
         df.columns = df.columns.str.strip()  # Eliminar espacios en los nombres de las columnas
         return df
     except Exception as e:
-        st.error(f"❌ Error al cargar datos de Google Sheets: {e}")
+        st.error(f"❌ Error al cargar datos de Google Sheets:\n\n{traceback.format_exc()}")
         return pd.DataFrame()
 
 # ✅ Cálculo de estadísticas históricas
