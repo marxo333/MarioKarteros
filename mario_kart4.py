@@ -45,7 +45,7 @@ def indice_clutch_historico(df):
     return clutch
 
 # Configuración
-archivo_json = "mario-kart-450011-e43e9822f75f.json"
+archivo_json = "mario-kart-450011-a5ad67f8be12.json"
 nombre_hoja = "Mariokarteros"
 df = cargar_datos_google_sheets(archivo_json, nombre_hoja)
 
