@@ -3,3 +3,5 @@ oauth2client
 pandas
 matplotlib
 streamlit
+google-auth
+google-auth-oauthlib
