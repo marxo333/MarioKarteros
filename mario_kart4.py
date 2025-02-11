@@ -44,16 +44,12 @@ def calcular_estadisticas_historicas(df):
     max_puntos = carreras_jugadas * 15
     porcentaje_puntos = (puntos_totales / max_puntos) * 100
 
-    # Promedio de puntos por torneo
-    promedio_puntos_torneo = puntos_totales / torneos_jugados
-
     df_historico = pd.DataFrame({
         'Torneos_Jugados': torneos_jugados,
         'Torneos_Ganados': torneos_ganados,
         'Carreras_Jugadas': carreras_jugadas,
         'Puntos_Totales': puntos_totales,
-        '% Puntos Obtenidos': porcentaje_puntos,
-        'Promedio Puntos por Torneo': promedio_puntos_torneo
+        '% Puntos Obtenidos': porcentaje_puntos
     }).fillna(0).reset_index()
 
     return df_historico
@@ -66,10 +62,17 @@ def coeficiente_dificultad_historico(df):
 
 def calcular_racha_victorias_historico(df):
     df = df.copy()
-    df['Ganó'] = df['Puesto Final'].astype(str).str.contains("1")
-    rachas = df.groupby(['Jugador', 'ID Torneo'])['Ganó'].max().reset_index()
-    rachas['Racha'] = rachas.groupby('Jugador')['Ganó'].cumsum()
-    return rachas.groupby('Jugador').agg({'Racha': 'max'}).reset_index()
+    df['Ganó'] = df['Puesto Final'] == 1
+    df = df.sort_values(by=['Jugador', 'ID Torneo'])
+
+    # Detectar rachas de victorias consecutivas
+    df['Cambio'] = (df['Ganó'] != df.groupby('Jugador')['Ganó'].shift()).cumsum()
+    df['Racha'] = df.groupby(['Jugador', 'Cambio']).cumcount() + 1
+
+    # Filtrar solo las rachas de victorias
+    rachas_victorias = df[df['Ganó']].groupby('Jugador')['Racha'].max().fillna(0).reset_index()
+
+    return rachas_victorias
 
 def indice_clutch_historico(df):
     clutch = df.groupby('Jugador')['Puntos Totales'].apply(lambda x: x.tail(3).mean()).reset_index()
@@ -93,7 +96,7 @@ if not df.empty:
     # Reordenar columnas para mayor claridad
     columnas_ordenadas = [
         'Jugador', 'Torneos_Jugados', 'Torneos_Ganados', 'Carreras_Jugadas',
-        'Puntos_Totales', 'Promedio Puntos por Torneo', '% Puntos Obtenidos',
+        'Puntos_Totales', '% Puntos Obtenidos',
         'Coeficiente Dificultad', 'Racha', 'Índice Clutch'
     ]
     df_final = df_final[columnas_ordenadas]
