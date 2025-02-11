@@ -80,11 +80,6 @@ def indice_clutch_historico(df):
 nombre_hoja = "Mariokarteros"
 df = cargar_datos_google_sheets(archivo_json, nombre_hoja)
 
-# Debug: Mostrar los primeros datos cargados
-st.subheader("🔍 Datos crudos desde Google Sheets")
-st.write(df.head())
-st.write("Columnas disponibles:", df.columns.tolist())
-
 if not df.empty:
     df_historico = calcular_estadisticas_historicas(df)
     df_coef_dificultad = coeficiente_dificultad_historico(df)
