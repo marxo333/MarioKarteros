@@ -31,9 +31,11 @@ def calcular_estadisticas_historicas(df):
     df_historico = df.groupby('Jugador').agg(
         Puntos_Totales=('Puntos Totales', 'sum'),
         Carreras_Jugadas=('Numero de Carreras', 'sum'),
-        Torneos_Jugados=('ID Torneo', 'nunique')
+        Torneos_Jugados=('ID Torneo', 'nunique'),
+        Torneos_Ganados=('Puesto Final', lambda x: (x == 1).sum())
     ).reset_index()
     df_historico['% Puntos Obtenidos'] = (df_historico['Puntos_Totales'] / (df_historico['Carreras_Jugadas'] * 15)) * 100
+    df_historico['Promedio Puntos por Torneo'] = df_historico['Puntos_Totales'] / df_historico['Torneos_Jugados']
     return df_historico
 
 def coeficiente_dificultad_historico(df):
@@ -67,6 +69,14 @@ if not df.empty:
     df_final = df_historico.merge(df_coef_dificultad, on='Jugador')
     df_final = df_final.merge(df_racha_victorias, on='Jugador')
     df_final = df_final.merge(df_clutch, on='Jugador')
+
+    # Reordenar columnas para mayor claridad
+    columnas_ordenadas = [
+        'Jugador', 'Torneos_Jugados', 'Torneos_Ganados', 'Carreras_Jugadas',
+        'Puntos_Totales', 'Promedio Puntos por Torneo', '% Puntos Obtenidos',
+        'Coeficiente Dificultad', 'Racha', 'Índice Clutch'
+    ]
+    df_final = df_final[columnas_ordenadas]
 
     # Web con Streamlit
     st.title("🏎️ Clasificación de Mario Kart")
