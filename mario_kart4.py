@@ -28,14 +28,34 @@ def cargar_datos_google_sheets(archivo_json, nombre_hoja):
 # Funciones para métricas
 
 def calcular_estadisticas_historicas(df):
-    df_historico = df.groupby('Jugador').agg(
-        Puntos_Totales=('Puntos Totales', 'sum'),
-        Carreras_Jugadas=('Numero de Carreras', 'sum'),
-        Torneos_Jugados=('ID Torneo', 'nunique'),
-        Torneos_Ganados=('Puesto Final', lambda x: (x == 1).sum())
-    ).reset_index()
-    df_historico['% Puntos Obtenidos'] = (df_historico['Puntos_Totales'] / (df_historico['Carreras_Jugadas'] * 15)) * 100
-    df_historico['Promedio Puntos por Torneo'] = df_historico['Puntos_Totales'] / df_historico['Torneos_Jugados']
+    # Calcular torneos jugados correctamente
+    torneos_jugados = df.groupby('Jugador')['ID Torneo'].nunique()
+
+    # Calcular carreras jugadas correctamente
+    carreras_jugadas = df.groupby(['Jugador', 'ID Torneo'])['Numero de Carreras'].mean().groupby('Jugador').sum()
+
+    # Sumar los puntos de todos los torneos
+    puntos_totales = df.groupby('Jugador')['Puntos Totales'].sum()
+
+    # Torneos ganados
+    torneos_ganados = df[df['Puesto Final'] == 1].groupby('Jugador')['ID Torneo'].nunique()
+
+    # Calcular % de puntos obtenidos
+    max_puntos = carreras_jugadas * 15
+    porcentaje_puntos = (puntos_totales / max_puntos) * 100
+
+    # Promedio de puntos por torneo
+    promedio_puntos_torneo = puntos_totales / torneos_jugados
+
+    df_historico = pd.DataFrame({
+        'Torneos_Jugados': torneos_jugados,
+        'Torneos_Ganados': torneos_ganados,
+        'Carreras_Jugadas': carreras_jugadas,
+        'Puntos_Totales': puntos_totales,
+        '% Puntos Obtenidos': porcentaje_puntos,
+        'Promedio Puntos por Torneo': promedio_puntos_torneo
+    }).fillna(0).reset_index()
+
     return df_historico
 
 def coeficiente_dificultad_historico(df):
@@ -71,9 +91,9 @@ if not df.empty:
     df_racha_victorias = calcular_racha_victorias_historico(df)
     df_clutch = indice_clutch_historico(df)
 
-    df_final = df_historico.merge(df_coef_dificultad, on='Jugador')
-    df_final = df_final.merge(df_racha_victorias, on='Jugador')
-    df_final = df_final.merge(df_clutch, on='Jugador')
+    df_final = df_historico.merge(df_coef_dificultad, on='Jugador', how='left')
+    df_final = df_final.merge(df_racha_victorias, on='Jugador', how='left')
+    df_final = df_final.merge(df_clutch, on='Jugador', how='left')
 
     # Reordenar columnas para mayor claridad
     columnas_ordenadas = [
