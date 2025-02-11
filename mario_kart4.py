@@ -7,7 +7,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 # Cargar datos desde Google Sheets
 def cargar_datos_google_sheets(archivo_json, nombre_hoja):
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-    credenciales = ServiceAccountCredentials.from_json_keyfile_name(archivo_json, scope)
+    credenciales = ServiceAccountCredentials.from_json_keyfile_dict(archivo_json, scope)
     cliente = gspread.authorize(credenciales)
     hoja = cliente.open(nombre_hoja).sheet1
     datos = hoja.get_all_records()
@@ -45,7 +45,8 @@ def indice_clutch_historico(df):
     return clutch
 
 # Configuración
-archivo_json = "mario-kart-450011-a5ad67f8be12.json"
+import json
+archivo_json = json.loads(st.secrets["google_credentials"]["json"])
 nombre_hoja = "Mariokarteros"
 df = cargar_datos_google_sheets(archivo_json, nombre_hoja)
 
